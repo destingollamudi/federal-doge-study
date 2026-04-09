@@ -1,6 +1,44 @@
-# Federal Workforce Attrition Study
+# Federal Workforce DOGE Study
 
-This project analyzes U.S. federal workforce data to study attrition across agencies and time. Data is ingested from OPM and stored in a Cloudflare R2 bucket; notebooks pull directly from the bucket — no local data files required.
+This project analyzes U.S. federal workforce data to investigate how the Department of Government Efficiency (DOGE) restructuring of 2025–2026 affected federal employees. It examines whether specific agencies and employee profiles were disproportionately impacted, and whether pre-restructuring workforce characteristics can predict which groups experienced the highest separation rates.
+
+Data is ingested from the U.S. Office of Personnel Management (OPM) and stored in a Cloudflare R2 bucket. Notebooks pull directly from the bucket — no local data files required.
+
+---
+
+## Research Question
+
+> Did the 2025 federal workforce restructuring driven by DOGE disproportionately affect specific employee profiles and agencies, and can pre-restructuring workforce characteristics predict which agencies and employee groups experienced the highest separation rates during this period?
+
+### Analysis Plan
+
+**Separations (`separations.ipynb`)**
+- Classify separations as voluntary (quits, retirements, transfers) vs involuntary (RIF, terminations)
+- Track involuntary separation rate month-by-month to isolate the DOGE signal from seasonal effects (e.g. the September 2025 voluntary surge)
+- Identify which agencies drove RIF activity — USAID, FDA, NIH, State Dept, CDC are primary targets
+- Profile who was involuntarily separated by age, tenure, pay plan, and appointment type
+
+**Employment (`employment.ipynb`)** *(in progress)*
+- Use monthly workforce snapshots as the denominator to compute true separation *rates* per agency
+- Establish pre-DOGE baseline workforce characteristics (size, age distribution, tenure mix) by agency
+- Track net headcount change over time per agency
+
+**Accessions (`accessions.ipynb`)** *(in progress)*
+- Track new hiring trends alongside separations — is DOGE cutting hiring as well?
+- Identify which appointment types (career vs excepted vs Schedule C) are being filled
+
+**Combined Analysis (`doge_analysis.ipynb`)** *(planned)*
+- Join separations to employment to compute agency-level separation rates
+- Regression: do pre-DOGE workforce characteristics (% temporary, % young, % non-tenured) predict involuntary separation rate?
+- Identify agencies experiencing net workforce collapse (high separations + low accessions)
+
+### Key Findings So Far
+
+- **September 2025 spike was voluntary, not DOGE** — 123k separations but 94% were quits/retirements; involuntary rate was only 4.9%
+- **July 2025 was the DOGE peak** — 36% involuntary rate, 5,392 RIFs in a single month (vs ~1 in Jan–Feb 2025)
+- **USAID is the clearest DOGE target** — 3,754 RIFs, while most other agencies show terminations of expired appointments rather than true RIFs
+- **Young and non-tenured workers bear the brunt** — 20–29 year olds are 7–9 points overrepresented in involuntary separations; career civil servants (tenure group 1) are 51 points underrepresented
+- **Defense Human Resources Activity is accelerating in 2026** — 1,200 involuntary separations in Jan–Feb 2026 vs 362 in all of 2025
 
 ---
 
@@ -9,12 +47,15 @@ This project analyzes U.S. federal workforce data to study attrition across agen
 ```
 federal-doge-study/
 ├── scripts/
-│   ├── data_loader.py     # R2 + local data loaders
-│   └── opm_to_r2.py       # Pipeline: OPM website → Cloudflare R2
+│   ├── data_loader.py       # R2 + local data loaders
+│   └── opm_to_r2.py         # Pipeline: OPM website → Cloudflare R2
 ├── notebooks/
-│   └── separations.ipynb  # Separations analysis
+│   ├── info.ipynb           # Data dictionary — columns, types, code lookups
+│   ├── separations.ipynb    # Separations analysis (voluntary vs involuntary, agency, profile)
+│   ├── employment.ipynb     # Workforce snapshot analysis (in progress)
+│   └── accessions.ipynb     # Hiring trend analysis (in progress)
 ├── requirements.txt
-└── .env                   # Cloudflare R2 credentials (not committed)
+└── .env                     # Cloudflare R2 credentials (not committed)
 ```
 
 ---
@@ -27,11 +68,11 @@ Data is obtained from the U.S. Office of Personnel Management (OPM):
 
 Datasets covered:
 
-- Employment (workforce snapshots, ~1.5 GB/month)
-- Accessions (new hires)
-- Separations (departures)
+- **Employment** — full workforce snapshots (~1.5–1.7 GB/month, ~2M rows per file)
+- **Accessions** — new hire events per month
+- **Separations** — departure events per month, with separation category codes
 
-Coverage: **January 2024 – February 2026**, all three dataset types.
+Coverage: **January 2024 – February 2026** (2025 pipeline complete; 2 months of 2026).
 
 ---
 
@@ -162,11 +203,14 @@ playwright
 
 ## Status
 
-- [x] Automated OPM → R2 pipeline (Jan 2024 – Feb 2026)
-- [x] R2-backed data loader for notebooks
-- [x] Separations analysis notebook
+**Data pipeline**
+- [x] Automated OPM → R2 pipeline (`opm_to_r2.py`)
+- [x] Jan–Dec 2025 uploaded (all three types); 2 employment files failed and need a re-run
+- [x] Jan–Feb 2026 uploaded
 
-Planned:
-- Time-series attrition rate computation
-- Agency-level regression and causal modeling
-- Accessions and employment notebooks
+**Notebooks**
+- [x] `info.ipynb` — data dictionary with code→descriptor lookup tables for all three file types
+- [x] `separations.ipynb` — voluntary vs involuntary classification, monthly trend, agency breakdown, employee profile analysis
+- [ ] `employment.ipynb` — workforce snapshot analysis (not started)
+- [ ] `accessions.ipynb` — hiring trend analysis (not started)
+- [ ] `doge_analysis.ipynb` — combined regression analysis (not started)
