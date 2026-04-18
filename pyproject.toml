@@ -1,0 +1,14 @@
+[project]
+name = "federal-doge-study"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=2.0",
+    "statsmodels>=0.14",
+    "scikit-learn>=1.6",
+    "jupyter>=1.1",
+    "boto3>=1.42",
+    "playwright>=1.58",
+    "pyarrow>=21.0",
+]
